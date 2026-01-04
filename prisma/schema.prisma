@@ -19,8 +19,66 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+ room Room[] // why 1 to many with the room -> becuse one user can have many room -> it can create many room
+ song Song[] // one user can add many song simple 
+vote Vote[]
+roomMember RoomMember[]
   @@unique([email])
   @@map("user")
+}
+
+model Room { // room table  and each tabel will have 
+id String @id @default(uuid()) // 
+host String // HOST -> it is the user who created the room -> userId for that
+roomCode String  // roomCode -> this will be for the url like room/12345678 like this not room/id 
+createdAt DateTime @default(now()) // when it was created
+user User @relation(fields: [host], references: [id]) // relationship with the user
+
+roomMember RoomMember[]
+song Song[] // inside the room there can be many song so ont to many should be fine here
+@@unique([roomCode])
+}
+
+enum Role {
+  host
+  listener
+}
+
+model RoomMember{
+  id String @id @default(uuid())
+  userId String
+  roomId String
+  role Role @default(listener)
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+}
+
+model Song{
+  id String @id @default(uuid())
+  title String
+  thumbnail String
+  roomId String
+  userId String
+
+  vote Vote[]
+
+ room Room @relation(fields: [roomId], references: [id]) 
+ user User @relation(fields: [userId], references: [id])
+}
+
+model Vote{
+  id String @id @default(uuid())
+  userId String
+  songId String
+
+  song Song @relation(fields: [songId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, songId])
 }
 
 model Session {
