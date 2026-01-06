@@ -25,9 +25,17 @@ console.log("room cODE : ", roomCode);
 const room = await prisma.room.create({
     data : {
 host : session.user.id,
-roomCode 
+roomCode
     }
 });
+
+await prisma.roomMember.create({
+    data : {
+       userId : session.user.id,
+       roomId : room.id,
+       role : "host" 
+    }
+})
 
 if(!room){
     return NextResponse.json({
@@ -41,3 +49,4 @@ return NextResponse.json({
 }, { status : 201})
 
 }
+
