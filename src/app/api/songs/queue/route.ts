@@ -2,16 +2,10 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { success } from "zod";
 
-// api/songs/queue -> in this we should get the queue of all the song, to show in the frontend 
 
 export async function GET(req : NextRequest){
-// now here 
-// logic -> get the user session 
-// -> get the roomCode in the payload -> check room exist then 
-// -> get the roomDetils and check user is the member of the room 
-// then get the songs with for that room and 
+console.log();
 
 const session = await auth.api.getSession({
     headers : await headers()
@@ -24,9 +18,10 @@ message: "Anuthorized",
     }, { status : 401})
 };
 
-const body = await req.json();
+const roomCode = req.nextUrl.searchParams.get("roomCode")
 
-if(!body.roomCode || body.roomCode.length != 8){
+
+if(!roomCode || roomCode.length !== 8){
     return NextResponse.json({
         success : false,
         message : "Not a valid roomCode"
@@ -35,7 +30,7 @@ if(!body.roomCode || body.roomCode.length != 8){
 
 const roomDetails = await prisma.room.findUnique({
     where : {
-         roomCode : body.roomCode
+         roomCode : roomCode
     }
 });
 
@@ -74,9 +69,16 @@ const queueSongs = await prisma.song.findMany({
         vote : true
     },
     orderBy : [
-        
+        {vote  : {  _count : "desc" } }, 
+        { createdAt : "asc"} 
     ]
-})
+});
+
+return NextResponse.json({
+    success : true,
+    message : "Queue fetched ",
+    data : queueSongs
+}, { status : 200})
 
 
 };

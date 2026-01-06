@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function Viwer({ roomCode} : { roomCode  : string}){
     const [showSearchModal, setYoutubeSerchModal] = useState(false)
     const [inputText , setInputText ] = useState("")
     const [youtubeData, setYoutubeData] = useState([])
     const [showSearchRes , setShowSearchRes] = useState(false) 
+    const [queueData , setQueueData] = useState()
 
 const fetchSongDetails = async() => {
 // here we should cann the youtube api and get the detisla and then show it . 
@@ -40,17 +41,23 @@ if(!res.ok){
 const data = await res.json()
 console.log("data : ", data);
 setShowSearchRes(false);
-setInputText("")
-return;
+setInputText("");
+return setYoutubeSerchModal(false);
 };
 
-
 const fetchQueue = async() => {
-  
-}
+   const allQueueSong = await fetch(`http://localhost:3000/api/songs/queue?roomCode=${roomCode}`, { method : "GET"});
+   const data = await allQueueSong.json();
+   console.log("data from queue api :  ", data);
+   setQueueData(data.data);
+};
+
+useEffect(() => {
+ fetchQueue();
+}, []);
 
 
-    return <div>
+return <div>
         <h2>Viwer component</h2>
 <div>
     {/* for shoign the yputube emmed for later */}
@@ -58,6 +65,22 @@ const fetchQueue = async() => {
 {/* this condion setYoutubeSerchModal(!showSearchModal) -> I started by mistakly but It working as expecy how -> intalit it is false clicking it seeting it true and on the next click it is true !true is false and then clicking it setting it to false
   thats why it is working fine and as expected ??  */}
 <button onClick={() => setYoutubeSerchModal(!showSearchModal)} className="border p-2 m-2 rounded-lg">AddSong</button>
+{
+   queueData && <div>
+    {
+      // @ts-ignore
+      queueData.map((eachSong) => {
+        console.log(eachSong);
+        return <div key={eachSong.id} className="flex items-center justify-start gap-2">
+          <img className="w-40" src={eachSong.thumbnail}/>
+          <h3 className="w-80">{eachSong.title}</h3>
+          <button className="border p-2 rounded-lg">Vote</button>
+          <h1 className="font-bold text-2xl text-red-300">Vote : {eachSong.vote.length}</h1>
+          </div>
+      })
+    }
+     </div>
+}
 {
     showSearchModal && <div>
         <input className="m-2 p-3 border rounded-2xl" value={inputText} onChange={(e) => setInputText(e.target.value)}/>
@@ -85,4 +108,4 @@ const fetchQueue = async() => {
          </div>
 }
     </div>
-}
+};
