@@ -39,10 +39,6 @@ if (!result.success) {
     );
 }
 
-// here also check if he is the member of that room or not otherwise anyone can vote in the anyroom 
-// and for that we also need the roomCode and get the roomId form the roomCode and then check for the 
-// member and after all of this check then we should upvote it , so add the roomCode also in the body
-  
   const { songId , roomCode } = result.data
   
   const roomDetils = await prisma.room.findUnique({
@@ -68,7 +64,6 @@ if (!song || song.roomId !== roomDetils.id) {
     { status: 400 }
   );
 }
-
 
   const isMember = await prisma.roomMember.findUnique({
     where : {
@@ -98,6 +93,11 @@ try {
       songId
     }
   });
+
+  return NextResponse.json({
+    success : true , 
+    message : "VOTED SUCCESSFULLY"
+  } , { status : 200})
 } catch (err) {
   return NextResponse.json(
     { success: false, message: "Already voted" },

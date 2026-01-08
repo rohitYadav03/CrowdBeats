@@ -13,6 +13,7 @@ export default function Dashboard(){
 const router = useRouter()
 const [inputCode , setInputCode] = useState("");
 const [error , setError] = useState("")
+
 const { data , isPending } = useSession();
 
    // now side effect during render -> pure function call -> so redirect only on useEffect
@@ -65,10 +66,12 @@ console.log("data : ", data);
     <h1 className="text-lg font-extrabold">Dashboard Page</h1>
     <h1>Welcome ,{ name} </h1>
 <button onClick={createRoom} className="border p-3 rounded-lg m-4">Create Room</button>
+
 <input className="border p-2 rounded-2xl m-4" value={inputCode} onChange={(e) => {
     setInputCode(e.target.value),
     setError("");
 }}/>
+
 {
     error && <h1 className="text-lg font-bold text-red-500">{error}</h1>
 }

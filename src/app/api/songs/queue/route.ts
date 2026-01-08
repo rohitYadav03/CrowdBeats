@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(req : NextRequest){
-console.log();
 
 const session = await auth.api.getSession({
     headers : await headers()
@@ -58,15 +57,14 @@ if(!isMember){
     }, { status : 403});
 }
 
-// now here user is logeed in , and member of the room now he should 
-// able to get the queue 
+
 
 const queueSongs = await prisma.song.findMany({
     where : {
         roomId : roomDetails.id,
     },
     include : {
-        vote : true
+  vote : true
     },
     orderBy : [
         {vote  : {  _count : "desc" } }, 

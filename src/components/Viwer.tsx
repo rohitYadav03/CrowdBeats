@@ -52,6 +52,27 @@ const fetchQueue = async() => {
    setQueueData(data.data);
 };
 
+const upVote = async({ songId} : { songId : string}) => {
+  const res = await fetch("http://localhost:3000/api/vote", {
+    method : "POST",
+    body : JSON.stringify({
+      songId,
+      roomCode
+    })
+  });
+
+  const data = await res.json();
+  // ideally we should set the error and then show it just for now I am avoiding it 
+  console.log("data after vote : ", data);
+  if(res.ok){
+    console.log("vote should have done");
+    
+    return true;
+  }
+  return alert(data.message)
+  
+}
+
 useEffect(() => {
  fetchQueue();
 }, []);
@@ -74,7 +95,7 @@ return <div>
         return <div key={eachSong.id} className="flex items-center justify-start gap-2">
           <img className="w-40" src={eachSong.thumbnail}/>
           <h3 className="w-80">{eachSong.title}</h3>
-          <button className="border p-2 rounded-lg">Vote</button>
+          <button onClick={() => upVote({songId : eachSong.id})} className="border p-2 rounded-lg">Vote</button>
           <h1 className="font-bold text-2xl text-red-300">Vote : {eachSong.vote.length}</h1>
           </div>
       })
@@ -84,7 +105,10 @@ return <div>
 {
     showSearchModal && <div>
         <input className="m-2 p-3 border rounded-2xl" value={inputText} onChange={(e) => setInputText(e.target.value)}/>
-        <button onClick={fetchSongDetails} className="m-2 p-3 border rounded-2xl">Search Song</button>
+        <button onClick={fetchSongDetails}
+         className="m-2 p-3 border rounded-2xl"
+         >Search Song
+         </button>
         </div>
 }
 {
@@ -105,7 +129,7 @@ return <div>
                 </div> 
             })
         }
-         </div>
+        </div>
 }
     </div>
 };

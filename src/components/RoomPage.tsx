@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 import Host from "./Host";
 import Viwer from "./Viwer";
-
+import socket from "./socketClinet";
 
 export default function RoomPageClient({ roomCode} : { roomCode : string}){
 const [role , setRole] = useState<"host" | "listener" | null>(null);
@@ -10,13 +10,12 @@ const [loading , setLoading] = useState(true)
 const [error , setError] = useState("")
 
 const fetchDetails = async() => {
-    console.log("function called");
+console.log("function called");
     
 setLoading(true);
 setError("");
   const res = await fetch(`http://localhost:3000/api/rooms/${roomCode}`, { method : "GET"});
   const data = await res.json();
-  console.log("data : ", data);
 
 if(!res.ok || !data.success){
     setError(data.message || "Something went wrong");
@@ -36,6 +35,8 @@ useEffect(() => {
 }, [roomCode]);
 
 if(loading){
+  console.log("loading called");
+  
     return <h1>Loading...</h1>
 }
 
