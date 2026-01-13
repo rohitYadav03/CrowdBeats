@@ -34,6 +34,11 @@ useEffect(() => {
    fetchDetails();
 }, [roomCode]);
 
+useEffect(() => {
+// here we should join the room 
+socket.emit("join-room",roomCode);
+}, [])
+
 if(loading){
   console.log("loading called");
   

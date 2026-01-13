@@ -34,6 +34,9 @@ roomCode String  // roomCode -> this will be for the url like room/12345678 like
 createdAt DateTime @default(now()) // when it was created
 user User @relation(fields: [host], references: [id]) // relationship with the user
 
+currentSongId String? 
+startedAt DateTime?
+
 roomMember RoomMember[]
 song Song[] // inside the room there can be many song so ont to many should be fine here
 @@unique([roomCode])
@@ -46,8 +49,8 @@ enum Role {
 
 model RoomMember{
   id String @id @default(uuid())
-  userId String
-  roomId String
+  userId    String
+  roomId    String
   role Role @default(listener)
   joinedAt DateTime @default(now())
 
@@ -63,6 +66,7 @@ model Song{
   thumbnail String
   roomId String
   userId String
+  videoId String
   createdAt DateTime @default(now())
 
   vote Vote[]

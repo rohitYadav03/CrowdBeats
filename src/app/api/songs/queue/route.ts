@@ -19,7 +19,6 @@ message: "Anuthorized",
 
 const roomCode = req.nextUrl.searchParams.get("roomCode")
 
-
 if(!roomCode || roomCode.length !== 8){
     return NextResponse.json({
         success : false,
@@ -56,8 +55,6 @@ if(!isMember){
   message : "You are not the member of this room"
     }, { status : 403});
 }
-
-
 
 const queueSongs = await prisma.song.findMany({
     where : {

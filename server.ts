@@ -25,21 +25,31 @@ const io = new Server(nodeHttpServer); // creating the socket.io server on top o
 // nodejs and it is telling whenever there is request for upgae then give it to me so we are handling 
 // socket requestion by io 
 
+// this happen automaticy the 
 io.on("connection", (socket) => {
+
 console.log("user connexted with websocket or socket.io ",socket.id);
 
+socket.on("firstSongAdded", (roomCode) => {
+    io.to(roomCode).emit("playbackUpdated")
+})
+
 socket.on("join-room", (roomId) => {
-    socket.join(roomId);
-console.log('room joined : ', roomId);
+socket.join(roomId);
+console.log(`sokcet Id : ${socket.id} joined room ${roomId}`);
 const room = io.sockets.adapter.rooms;
-const count = room ? room.size : 0
+const count = room ? room.size : 0;
 
 io.to(roomId).emit("room-user-count", count)
+});
 
+socket.on("queue-changed", (roomCode) => {
+    console.log("event revied for : ", roomCode);
+    
+    io.to(roomCode).emit("queue-updated")
 })
 
 socket.on("disconnect", () => {
-        socket.disconnect();
 })
 })
 

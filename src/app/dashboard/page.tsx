@@ -24,7 +24,7 @@ if(!data && !isPending){
 }, [data, isPending]);
 
    if(isPending){
-    return <h1>Loading....</h1>
+    return <h1>Loading..!..</h1>
    }
 
 const name = data?.user.name;
@@ -65,7 +65,9 @@ console.log("data : ", data);
    return <div className="flex flex-col w-2/4 items-center justify-center mt-10">
     <h1 className="text-lg font-extrabold">Dashboard Page</h1>
     <h1>Welcome ,{ name} </h1>
-<button onClick={createRoom} className="border p-3 rounded-lg m-4">Create Room</button>
+<button onClick={createRoom}
+ className="border p-3 rounded-lg m-4"
+ >Create Room</button>
 
 <input className="border p-2 rounded-2xl m-4" value={inputCode} onChange={(e) => {
     setInputCode(e.target.value),

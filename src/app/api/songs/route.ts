@@ -3,16 +3,13 @@ import prisma from "@/lib/prisma";
 import { formatZodErrors } from "@/lib/validators/formatZodErrors";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { z} from 'zod'
-// api/song method POST
-// this api for adding the song 
-
-
+import { z } from 'zod' 
 
 const addSongSchema = z.object({
-    thumbnail : z.string().url("Enter a valid url"),
-    title : z.string().min(1, "Not the valid title"),
-   roomCode : z.string().length(8, "RoomCode must be of 8 character long")
+   thumbnail : z.string().url("Enter a valid url"),
+   title : z.string().min(1, "Not the valid title"),
+   roomCode : z.string().length(8, "RoomCode must be of 8 character long"),
+   videoId : z.string().min(1, "VideoId is invalid ")
 })
 
 export async function POST(req : NextRequest){
@@ -42,7 +39,7 @@ return NextResponse.json(
   );
 };
 
-const { thumbnail, title, roomCode } = validatedData.data;
+const { thumbnail, title, roomCode, videoId } = validatedData.data;
 
 const roomDetails = await prisma.room.findUnique({
     where : {
@@ -75,16 +72,53 @@ if(!isMember){
     }, { status : 403});
 }
 
+// after checking all this we should also look for currentPlayinsongId
+if(roomDetails.currentSongId === null){
+// then create the room and then update the room Tabel 
+
+const s = await prisma.song.create({
+    data : {
+        thumbnail,
+        title,
+        userId : session.user.id,
+        roomId : roomDetails.id,
+        videoId : videoId
+    }
+});
+
+// then update the currentPlaying 
+await prisma.room.update({
+    where : {
+        id : roomDetails.id
+    },
+    data : {
+        currentSongId : s.id,
+        startedAt : new Date()
+    }
+});
+
+
+return NextResponse.json({
+    firstSong : true,
+    success : true,
+    message : "SONG added successfully and first song added"
+}, { status : 201})
+
+
+}
+
 const song = await prisma.song.create({
     data : {
         thumbnail,
         title,
         userId : session.user.id,
-         roomId : roomDetails.id
+         roomId : roomDetails.id,
+         videoId : videoId
     }
 });
 
 return NextResponse.json({
+    firstSong : false,
     success : true,
     message : "SONG added successfully "
 }, { status : 201})
