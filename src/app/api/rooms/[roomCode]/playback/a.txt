@@ -1,0 +1,327 @@
+## 📌 Project Context: Crowdbeat (Spotify Jam–like app)
+
+### 🧠 High-level idea
+
+I am building a **Spotify Jam–like real-time room app** where multiple users join a room and listen to the **same song in sync**.
+
+Key ideas:
+
+* One **host** controls playback
+* Other users are **listeners**
+* Songs are added to a shared queue
+* Queue is ordered by votes
+* Playback must stay synced even if users:
+
+  * join late
+  * refresh
+  * reconnect
+
+---
+
+## 🏗 Tech stack
+
+* **Next.js (App Router)**
+* **Prisma + PostgreSQL**
+* **Socket.IO** (only client → server → client events)
+* **YouTube embeds** for playback
+* Auth is session-based (host identified via userId)
+
+Important constraint:
+
+> Next.js API routes are **serverless**, so backend sockets cannot be reliably shared across APIs.
+> Therefore:
+>
+> * Backend APIs **do NOT emit sockets**
+> * Backend returns flags
+> * Frontend emits socket events
+
+---
+
+## 🗄 Database Schema (important fields only)
+
+### Room
+
+```ts
+Room {
+  id
+  roomCode
+  host            // userId
+  currentSongId   // Song.id | null
+  startedAt       // Date | null
+  isPaused        // boolean
+  pausedAt        // Date | null
+}
+```
+
+### Song
+
+```ts
+Song {
+  id
+  roomId
+  videoId        // YouTube videoId
+  createdAt
+}
+```
+
+### Vote
+
+```ts
+Vote {
+  userId
+  songId
+}
+```
+
+---
+
+## 🎯 Core design decisions (VERY IMPORTANT)
+
+### 1️⃣ Single Source of Truth
+
+* **Playback state lives in the DB**, not frontend
+* Frontend always:
+
+  * calls `/playback`
+  * calculates `elapsed = now - startedAt`
+
+---
+
+### 2️⃣ Pause handling (key insight)
+
+Instead of subtracting pause time everywhere:
+
+* On **pause**:
+
+  * `isPaused = true`
+  * `pausedAt = now`
+
+* On **resume**:
+
+  * `pauseDuration = now - pausedAt`
+  * `startedAt = startedAt + pauseDuration`
+  * `isPaused = false`
+  * `pausedAt = null`
+
+Result:
+
+* Pause time is **removed from history**
+* Frontend always uses the SAME formula:
+
+```ts
+elapsed = now - startedAt
+```
+
+No pause math on frontend.
+
+---
+
+### 3️⃣ Why frontend emits socket events
+
+Because:
+
+* Next.js APIs are serverless
+* Singleton socket pattern does NOT work reliably
+* APIs may run in different workers
+
+So the flow is:
+
+```
+Frontend → API (mutate DB)
+Frontend → socket.emit()
+Other clients → refetch API
+```
+
+---
+
+## 🔌 Existing APIs (with purpose)
+
+### Auth
+
+Handled already (session-based).
+
+---
+
+### 🟢 POST /api/songs
+
+**Purpose:**
+
+* Add a song to a room
+
+**Logic:**
+
+* Validate user is room member
+* Create song
+* If `room.currentSongId === null`:
+
+  * This is the **first song**
+  * Set:
+
+    * `currentSongId`
+    * `startedAt = now`
+  * Return:
+
+    ```json
+    { "firstSong": true }
+    ```
+* Else:
+
+  ```json
+  { "firstSong": false }
+  ```
+
+Frontend:
+
+* If `firstSong === true`
+  → emit `playbackUpdated`
+* Always emit `queue-updated`
+
+---
+
+### 🟢 GET /api/songs/queue
+
+**Purpose:**
+
+* Get queue sorted by:
+
+  1. vote count (desc)
+  2. createdAt (asc)
+
+---
+
+### 🟢 POST /api/vote
+
+**Purpose:**
+
+* Vote on a song
+
+Frontend:
+
+* Emits `queue-updated`
+* Everyone refetches queue
+
+---
+
+### 🟢 GET /api/rooms/:roomCode/playback
+
+**Purpose:**
+
+* Sync playback for:
+
+  * late join
+  * refresh
+  * socket update
+
+**Returns:**
+
+```ts
+{
+  currentSongId,
+  videoId,
+  startedAt,
+  isPaused
+}
+```
+
+Frontend:
+
+* If `isPaused` → show paused state
+* Else → embed YouTube with:
+
+```ts
+start = Math.floor((Date.now() - startedAt) / 1000)
+```
+
+---
+
+### 🟢 POST /api/rooms/:roomCode/pause (HOST ONLY)
+
+**Purpose:**
+
+* Pause playback for the room
+
+**Logic:**
+
+* Check host
+* Set:
+
+  * `isPaused = true`
+  * `pausedAt = now`
+
+Frontend:
+
+* Emits `playbackUpdated`
+
+---
+
+### 🟢 POST /api/rooms/:roomCode/play (HOST ONLY)
+
+**Purpose:**
+
+* Resume playback
+
+**Logic:**
+
+* Check host
+* Calculate pauseDuration
+* Shift `startedAt`
+* Clear pause state
+
+Frontend:
+
+* Emits `playbackUpdated`
+
+---
+
+### 🟢 POST /api/rooms/:roomCode/skip (HOST ONLY)
+
+**Purpose:**
+
+* Skip current song
+
+**Logic:**
+
+* Find next song:
+
+  * same room
+  * exclude currentSongId
+  * order by votes desc, createdAt asc
+* If no next song:
+
+  * clear playback (`currentSongId = null`)
+* Else:
+
+  * set new `currentSongId`
+  * `startedAt = now`
+  * clear pause state
+
+Frontend:
+
+* Emits `playbackUpdated`
+* Everyone refetches playback + queue
+
+---
+
+## 🔊 Socket events (frontend-driven)
+
+| Event             | Purpose          |
+| ----------------- | ---------------- |
+| `queue-updated`   | Refetch queue    |
+| `playbackUpdated` | Refetch playback |
+
+Sockets are **stateless**.
+All real data comes from APIs.
+
+---
+
+## 🎯 Current status
+
+✅ Real-time queue
+✅ Voting
+✅ First-song logic
+✅ Late join sync
+✅ Pause / Play (host)
+✅ Skip (host)
+
+---
+

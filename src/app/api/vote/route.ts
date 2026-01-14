@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { formatZodErrors } from "@/lib/validators/formatZodErrors";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod"
+import { success, z } from "zod"
 
 const voteSchema = z.object({
     songId : z.string().min(1, "Invalid song"),
@@ -81,11 +81,6 @@ if (!song || song.roomId !== roomDetils.id) {
       }, { status : 403})
   };
 
-// now it is member alos , signed in and all the check is done 
-// we could check if the songId is valid or not , but we have realtion and 
-// if the songId will not be valid then it will automicall not vote it song this is okay
-//  becuse we should think about performance as well ??
-
 try {
   await prisma.vote.create({
     data: {
@@ -98,11 +93,16 @@ try {
     success : true , 
     message : "VOTED SUCCESSFULLY"
   } , { status : 200})
-} catch (err) {
-  return NextResponse.json(
-    { success: false, message: "Already voted" },
-    { status: 409 }
-  );
+} catch (err : any) {
+  if(err.code === 'P2002'){
+    return NextResponse.json({
+      success : false ,
+      message : "alredy voted"
+    }, { status : 409})
+  };
+  console.error("Vote error:", err);
+  return NextResponse.json({ success: false, message: "Failed to vote" }, { status: 500 });
+
 }
 
 

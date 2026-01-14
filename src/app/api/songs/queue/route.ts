@@ -60,7 +60,7 @@ const queueSongs = await prisma.song.findMany({
     where : {
         roomId : roomDetails.id,
     },
-    include : {
+    include : { // curently sending the complete , later fix it 
   vote : true
     },
     orderBy : [

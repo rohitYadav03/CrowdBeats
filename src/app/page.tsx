@@ -1,3 +1,4 @@
+import LandingPage from "@/components/LandingPage";
 import SignInButton from "@/components/signin";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -11,9 +12,6 @@ export default async function Home() {
       redirect("/dashboard")
     }
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1>Hello form nextjs </h1>
-    <SignInButton />
-    </div>
+   <LandingPage />
   );
 }

@@ -68,7 +68,8 @@ return NextResponse.json({
      data : {
        currentSongId : roomDetails.currentSongId,
        startedAt : roomDetails.startedAt,
-        videoId : songDetils.videoId
+        videoId : songDetils.videoId,
+        isPaused : roomDetails.isPaused
      }
 }, { status : 200})
 

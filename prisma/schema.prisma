@@ -60,6 +60,8 @@ model RoomMember{
   room Room @relation(fields: [roomId], references: [id])
 
   @@unique([userId, roomId])
+    // changes given by calude
+    @@index([roomId]) // Good for listing room members
 }
 
 model Song{
@@ -75,6 +77,11 @@ model Song{
 
  room Room @relation(fields: [roomId], references: [id]) 
  user User @relation(fields: [userId], references: [id])
+
+// changes given by calude
+    @@index([roomId]) // ⚡ CRITICAL for queue queries
+    @@index([roomId, createdAt]) // ⚡ Composite index for sorting
+
 }
 
 model Vote{
@@ -86,6 +93,8 @@ model Vote{
   user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, songId])
+  // changes given by calude
+@@index([songId]) // ⚡ CRITICAL for vote counting
 }
 
 model Session {

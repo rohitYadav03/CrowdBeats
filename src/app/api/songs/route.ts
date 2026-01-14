@@ -72,7 +72,8 @@ if(!isMember){
     }, { status : 403});
 }
 
-// after checking all this we should also look for currentPlayinsongId
+// there can be race condtion here but ignoring it becuse of the chase of race condtion 
+// the chance for race condtioon is very low rather than I will sprnd my time building othe feature
 if(roomDetails.currentSongId === null){
 // then create the room and then update the room Tabel 
 
