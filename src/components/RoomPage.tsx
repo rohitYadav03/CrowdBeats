@@ -50,7 +50,7 @@ if(error){
 }
 
 return <div>
-   { role == "host" ? <Host /> : <Viwer roomCode={roomCode}/>}
+   { role == "host" ? <Host roomCode={roomCode} /> : <Viwer roomCode={roomCode}/>}
 </div>
 
 }

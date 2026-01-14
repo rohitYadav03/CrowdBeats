@@ -36,6 +36,8 @@ user User @relation(fields: [host], references: [id]) // relationship with the u
 
 currentSongId String? 
 startedAt DateTime?
+isPaused Boolean @default(false)
+pausedAt DateTime?
 
 roomMember RoomMember[]
 song Song[] // inside the room there can be many song so ont to many should be fine here

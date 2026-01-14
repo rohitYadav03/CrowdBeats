@@ -25,6 +25,8 @@ const roomDetails = await prisma.room.findUnique({
 });
 
 if(!roomDetails){
+    console.log("this room not found");
+    
     return NextResponse.json({
         message : "No room found"
     }, { status : 404})
