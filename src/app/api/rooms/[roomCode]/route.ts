@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req : NextRequest, { params } : { params : Promise<{roomCode : string}>}){
+export async function GET(_req : Request, { params } : { params : Promise<{roomCode : string}>}){
 
 const { roomCode } = await params;
 
@@ -50,7 +50,6 @@ return NextResponse.json(
     { success : true, 
         message : "user detils are valid",
         data : {
-            room : roomDetisls,
             role : memberOfRoom.role
         }
      },

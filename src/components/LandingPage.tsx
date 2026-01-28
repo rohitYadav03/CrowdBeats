@@ -1,4 +1,4 @@
-import { Music, Radio, Users } from "lucide-react";
+import { Music,  Radio, Users } from "lucide-react";
 import SignInButton from "./signin";
 
 export default function LandingPage() {
@@ -15,7 +15,7 @@ export default function LandingPage() {
       <div className="relative z-10 flex flex-col  items-center justify-center min-h-screen px-4">
         {/* Logo/Title */}
         <div className="flex items-center gap-3 mb-6">
-          <Radio className="w-14 h-14 text-purple-400" />
+          <Music className="w-14 h-14 text-purple-400" />
           <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
             Crowdbeat
           </h1>
@@ -56,6 +56,7 @@ export default function LandingPage() {
   );
 }
 
+//  for one card 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="flex items-start gap-4 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 max-w-xs hover:bg-white/10 transition-colors">

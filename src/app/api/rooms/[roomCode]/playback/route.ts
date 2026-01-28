@@ -68,14 +68,10 @@ return NextResponse.json({
      data : {
        currentSongId : roomDetails.currentSongId,
        startedAt : roomDetails.startedAt,
-        videoId : songDetils.videoId,
-        isPaused : roomDetails.isPaused
+       videoId : songDetils.videoId,
+       isPaused : roomDetails.isPaused
      }
 }, { status : 200})
 
 };
 
-export async function POST(req  : NextRequest , { params } : {params : Promise<{ roomCode : string}>}) {
-    const {roomCode } = await params;
- 
-}

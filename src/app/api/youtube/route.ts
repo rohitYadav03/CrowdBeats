@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-// api/youtube
 export async function GET(req:NextRequest){
 
 const session = await auth.api.getSession(({
@@ -31,7 +30,7 @@ try {
 const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&key=${process.env.API_KEY}&q=${query}&type=video&maxResults=5`, { method : "GET"})
 
 if(!response.ok){
-       throw new Error("Something went wrong") 
+ throw new Error("Something went wrong") 
 }
 
 const data = await response.json();
@@ -43,7 +42,6 @@ return NextResponse.json({
 } , { status : 200})
 
 } catch (error) {
-    console.log("error fetching from youtube api : ", error);
     return NextResponse.json({
         success : false,
         message : "Something went wrong"

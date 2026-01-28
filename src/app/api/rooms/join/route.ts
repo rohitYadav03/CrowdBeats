@@ -66,10 +66,8 @@ if(alredyRoomJoined){
   return NextResponse.json({
     success : true,
     message : "Already joined the room",
-
   }, { status : 200})
 }
-    // means user is joing the room for the first time 
     await prisma.roomMember.create({
         data : {
             userId : session.user.id,
@@ -81,7 +79,5 @@ return NextResponse.json({
         success : true,
         message : "Room joined"
     }, { status : 201})
-
-
 
 }

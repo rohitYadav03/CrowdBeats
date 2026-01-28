@@ -5,13 +5,18 @@ import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod' 
 
-const addSongSchema = z.object({
-   thumbnail : z.string().url("Enter a valid url"),
-   title : z.string().min(1, "Not the valid title"),
-   roomCode : z.string().length(8, "RoomCode must be of 8 character long"),
-   videoId : z.string().min(1, "VideoId is invalid ")
-})
 
+const addSongSchema = z.object({
+  thumbnail: z.string().url(),
+  title: z.string()
+    .min(1)
+    .max(200)
+    .transform(val => val.trim()), 
+  roomCode: z.string().length(8),
+  videoId: z.string()
+    .min(1)
+    .max(20) 
+});
 export async function POST(req : NextRequest){
 
 const session = await auth.api.getSession({
@@ -73,7 +78,7 @@ if(!isMember){
 }
 
 // there can be race condtion here but ignoring it becuse of the chase of race condtion 
-// the chance for race condtioon is very low rather than I will sprnd my time building othe feature
+// the chance for race condtioon is very low rather than I will sprnd my time building other feature
 if(roomDetails.currentSongId === null){
 // then create the room and then update the room Tabel 
 

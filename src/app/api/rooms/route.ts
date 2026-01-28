@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import {v4 as uuidv4}  from "uuid";
 
-export async function POST(req : NextRequest){
+export async function POST(_req : NextRequest){
 
 const session = await auth.api.getSession({
         headers : await headers()
@@ -17,10 +17,8 @@ if(!session){
 }
 
 const uuid = uuidv4()
-console.log(uuid);
 
 const roomCode = uuid.slice(0,8);
-console.log("room cODE : ", roomCode);
 
 const room = await prisma.room.create({
     data : {

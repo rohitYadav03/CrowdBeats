@@ -1,16 +1,28 @@
 "use client";
-
-import { useState } from "react";
+import { toast } from "sonner"
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, LogIn, Music2, Sparkles, Check } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
+import { DashboardLoadingSkeleton } from "@/components/RoomLoadingSkeleton";
 
 export default function DashboardPage() {
   const [inputCode, setInputCode] = useState(""); // roomCode enter by user
   const [error, setError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+
+  const  {data , isPending} = useSession()
+
+  useEffect(() => {
+    console.log(data , isPending);
+    
+   if(!data && !isPending){
+    window.location.href = "/"
+   }
+  }, [data, isPending]);
 
   const createRoom = async () => {
     setIsCreating(true);
@@ -20,13 +32,14 @@ export default function DashboardPage() {
       });
       const data = await res.json();
 
+
       if (!res.ok) {
-        throw new Error("Room not created");
+        toast.error("Failed to create room")
       }
 
       window.location.href = `/room/${data.data}`;
     } catch (err) {
-      alert("Failed to create room");
+      toast.error("Failed to create room ")
     } finally {
       setIsCreating(false);
     }
@@ -61,11 +74,15 @@ export default function DashboardPage() {
     }
   };
 
+  if(isPending){
+    return <DashboardLoadingSkeleton />
+  }
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Animated background orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-700" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       {/* Header */}
@@ -82,7 +99,7 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-purple-500/50">
-              X
+              { data?.user.name.slice(0,1).toUpperCase()}
             </div>
           </div>
         </div>
@@ -192,7 +209,7 @@ export default function DashboardPage() {
                     placeholder="XXXXXXXX"
                     value={inputCode}
                     onChange={(e) => {
-                      setInputCode(e.target.value.toUpperCase());
+                      setInputCode(e.target.value);
                       setError("");
                     }}
                     maxLength={8}
@@ -207,7 +224,7 @@ export default function DashboardPage() {
 
                 {error && (
                   <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+                    <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse" />
                     <p className="text-sm text-red-400">{error}</p>
                   </div>
                 )}
@@ -241,7 +258,7 @@ export default function DashboardPage() {
 
         {/* Bottom tip with better styling */}
         <div className="flex items-center justify-center gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm max-w-2xl mx-auto">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+          <div className=" w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-purple-400" />
           </div>
           <div className="text-left">

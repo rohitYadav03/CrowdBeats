@@ -4,6 +4,7 @@ import "./globals.css";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,11 +28,25 @@ export default async function RootLayout({
 }>) {
   
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+<html lang="en" suppressHydrationWarning>
+  <body 
+    className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    suppressHydrationWarning
+  >
         {children}
+        <Toaster 
+        position="top-center"
+          toastOptions={{
+            style: {
+              background: '#1a1a1a',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#fff',
+            },
+            className: 'backdrop-blur-xl',
+            duration: 3000,
+          }}
+          theme="dark"
+        />
       </body>
     </html>
   );

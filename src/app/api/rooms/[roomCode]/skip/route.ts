@@ -3,35 +3,53 @@ import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function POST(
-  _req: Request,
-  { params }: { params: Promise<{ roomCode: string }> }
-) {
-const { roomCode } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+export async function POST( _req : Request , { params } : { params : Promise<{ roomCode : string}>}){
+
+  const { roomCode } = await params;
+  const session = await auth.api.getSession({
+    headers  : await headers()
+  });
+
+  if(!session){
+    return NextResponse.json({
+      message : 'Unauthorized'
+    }, { status : 401})
+  };
 
   const room = await prisma.room.findUnique({
-    where: { roomCode:  roomCode  },
-  });
+    where : {
+      roomCode 
+    }
+  })
 
-  if (!room || room.host !== session.user.id) {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
+  if(!room || room.host !== session.user.id){
+    return NextResponse.json({
+      message : 'Forbidden'
+    } , { status : 403})
+  };
 
-  const nextSong = await prisma.song.findFirst({
-    where: {
-      roomId: room.id, // this condition I got it that roomId should match to current id 
-      NOT: room.currentSongId ? { id: room.currentSongId } : undefined, // but I didnt understand this condition or check ?? what is this and why this ??
+// NOTE: Ideally this logic should be wrapped in a DB transaction
+// to ensure atomicity. Will refactor after studying ACID properties.
+
+  if(room.currentSongId){
+    await prisma.song.delete({
+      where : {
+        id : room.currentSongId
+      }
+    })
+  };
+ 
+  const nextsong = await prisma.song.findFirst({
+    where : {
+      roomId : room.id
     },
-    orderBy: [
-      { vote: { _count: "desc" } },
-      { createdAt: "asc" },
-    ],
-  });
+    orderBy  : [
+      { vote : { _count : "desc"}},
+      { createdAt : "asc"}
+    ]
+  })
 
-  //  if no song then why we are setting it to null and all that ?? 
-  if (!nextSong) {
+  if (!nextsong) {
     await prisma.room.update({
       where: { id: room.id },
       data: {
@@ -41,19 +59,19 @@ const { roomCode } = await params;
         pausedAt: null,
       },
     });
-    return NextResponse.json({ success: true, empty: true });
+return NextResponse.json({ empty : true})
   }
+await prisma.room.update({
+  where : {
+    id : room.id
+  },
+  data : {
+    currentSongId : nextsong.id,
+    startedAt : new Date(),
+    isPaused : false,
+    pausedAt : null
+  }
+});
+return NextResponse.json({ success: true });
 
-  // okay update the room tabel for the next song 
-  await prisma.room.update({
-    where: { id: room.id },
-    data: {
-      currentSongId: nextSong.id,
-      startedAt: new Date(),
-      isPaused: false,
-      pausedAt: null,
-    },
-  });
-
-  return NextResponse.json({ success: true });
 }

@@ -1,62 +1,89 @@
-import { createServer } from "http"
+import { createServer } from "http";
 import { Server } from "socket.io";
 import next from "next";
+import prisma from "@/lib/prisma";
 
 const dev = process.env.NODE_ENV !== "production";
-// here we are checking NODE_ENV is not equeal to production , if Node en is not prodution then 
-// this dev will be true else false , and if  true then nextjs will run in the dev mode and 
-// and not in the production mode , 
-
-const app = next({ dev }) // this is creating the nextjs instace in the dev mode like how we do in the expresss
-// const app = expres() , creating the instance of express , the same we are doing here creating the instace of 
-// nextjs 
-
+const app = next({ dev });
 const handle = app.getRequestHandler();
-// app.getRequestHandler is for handling the rest api , means that http reauest pass to the nextjs 
-// that he will handle it , 
 
-// here we are wating till our app is ready , then only create server or anything 
 app.prepare().then(() => {
+  const nodeHttpServer = createServer((req, res) => handle(req, res));
 
-const nodeHttpServer = createServer((req , res) => handle(req, res)); // passing the http request to nextjs 
-// to handle it and send respose 
+  const io = new Server(nodeHttpServer, {
+    cors: {
+      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      credentials: true
+    }
+  });
 
-const io = new Server(nodeHttpServer); // creating the socket.io server on top of raw nodejs http server which we have made with http module of 
-// nodejs and it is telling whenever there is request for upgae then give it to me so we are handling 
-// socket requestion by io 
+  io.on("connection", (socket) => {
+    console.log(`${socket.id} connected`);
 
-// this happen automaticy the 
-io.on("connection", (socket) => {
+    socket.on("join-room", ({ roomCode, userId }: { roomCode: string; userId: string }) => {
+      console.log(`User ${userId} joining room ${roomCode}`);
 
-console.log("user connexted with websocket or socket.io ",socket.id);
+      // Store in socket.data for disconnect event
+      socket.data.roomCode = roomCode;
+      socket.data.userId = userId;
 
-socket.on("firstSongAdded", (roomCode) => {
-    io.to(roomCode).emit("playbackUpdated")
-})
+      // Join Socket.IO room
+      socket.join(roomCode);
 
-socket.on("join-room", (roomId) => {
-socket.join(roomId);
-console.log(`sokcet Id : ${socket.id} joined room ${roomId}`);
-const room = io.sockets.adapter.rooms;
-const count = room ? room.size : 0;
+      // Emit user count
+      const userCount = io.sockets.adapter.rooms.get(roomCode)?.size || 0;
+      io.to(roomCode).emit("user-count", userCount);
+    });
 
-io.to(roomId).emit("room-user-count", count)
+    socket.on("playbackUpdated", (roomCode: string) => {
+      io.to(roomCode).emit("fetchPlayback");
+    });
+
+    socket.on("queueUpdated", (roomCode: string) => {
+      io.to(roomCode).emit("fetchQueue");
+    });
+
+    // Disconnect event
+    socket.on("disconnect", async () => {
+      console.log("User disconnected:", socket.id);
+
+      const roomCode = socket.data.roomCode;
+      const userId = socket.data.userId;
+
+      if (!roomCode || !userId) return;
+
+      try {
+        const room = await prisma.room.findUnique({
+          where: { roomCode },
+          include: { song: true, roomMember: true }
+        });
+
+        if (!room) return;
+
+        if (room.host === userId) {
+          // Host left - cleanup
+          await prisma.song.deleteMany({ where: { roomId: room.id } });
+          await prisma.roomMember.deleteMany({ where: { roomId: room.id } });
+          await prisma.room.delete({ where: { id: room.id } });
+
+          io.to(roomCode).emit("room-ended", {
+            message: "Host left. Room ended."
+          });
+
+          const socketsInRoom = await io.in(roomCode).fetchSockets();
+          socketsInRoom.forEach((s) => s.leave(roomCode));
+        } else {
+          // Member left - update count
+          const userCount = io.sockets.adapter.rooms.get(roomCode)?.size || 0;
+          io.to(roomCode).emit("user-count", userCount);
+        }
+      } catch (error) {
+        console.error("Disconnect error:", error);
+      }
+    });
+  });
+
+  nodeHttpServer.listen(3000, () => {
+    console.log("🚀 Server on port 3000");
+  });
 });
-
-socket.on("queue-changed", (roomCode) => {
-    console.log("event revied for : ", roomCode);
-    
-    io.to(roomCode).emit("queue-updated")
-})
-
-socket.on("disconnect", () => {
-})
-})
-
-// at last listing on port 3000
-nodeHttpServer.listen(3000, () => {
-    console.log("listing in port 3000");
-});
-
-})
-

@@ -1,17 +1,18 @@
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
+import {  NextResponse } from "next/server";
 
 export async function POST(
-  _req: NextRequest, 
-  { params }: { params: { roomCode: string } }
+  _req: Request, 
+  { params }: { params: Promise<{ roomCode: string }> }
 ) {
+  const { roomCode } = await params;
   const session = await auth.api.getSession({ headers: await headers() }); // auth check 
   if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 }); // if not the return form here only
 
   const room = await prisma.room.findUnique({
-    where: { roomCode: params.roomCode },
+    where: { roomCode }
   });// find the room with the given roomCode which is found in the params
 
   if (!room || room.host !== session.user.id ) {
@@ -27,5 +28,5 @@ export async function POST(
     },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true } , { status : 200});
 }
