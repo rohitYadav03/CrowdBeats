@@ -6,9 +6,12 @@ import { NextResponse } from "next/server";
 export async function POST( _req : Request , { params } : { params : Promise<{ roomCode : string}>}){
 
   const { roomCode } = await params;
+  console.log("roomCode in skip : ", roomCode);
+  
   const session = await auth.api.getSession({
     headers  : await headers()
   });
+console.log("session is skip : ", session);
 
   if(!session){
     return NextResponse.json({
@@ -21,6 +24,7 @@ export async function POST( _req : Request , { params } : { params : Promise<{ r
       roomCode 
     }
   })
+console.log("room is skip : ", room);
 
   if(!room || room.host !== session.user.id){
     return NextResponse.json({
@@ -32,6 +36,13 @@ export async function POST( _req : Request , { params } : { params : Promise<{ r
 // to ensure atomicity. Will refactor after studying ACID properties.
 
   if(room.currentSongId){
+
+     await prisma.vote.deleteMany({
+    where: {
+      songId: room.currentSongId
+    }
+  });
+
     await prisma.song.delete({
       where : {
         id : room.currentSongId
@@ -48,6 +59,7 @@ export async function POST( _req : Request , { params } : { params : Promise<{ r
       { createdAt : "asc"}
     ]
   })
+console.log("next song : ", nextsong);
 
   if (!nextsong) {
     await prisma.room.update({
@@ -72,6 +84,8 @@ await prisma.room.update({
     pausedAt : null
   }
 });
+console.log("here");
+
 return NextResponse.json({ success: true });
 
 }

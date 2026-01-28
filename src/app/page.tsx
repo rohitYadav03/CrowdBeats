@@ -5,10 +5,16 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-
-  const session = await auth.api.getSession({
-      headers : await headers()
+let session = null;
+  try {
+    session = await auth.api.getSession({
+      headers: await headers()
     });
+  } catch (error) {
+    console.error('Session fetch failed:', error);
+    // Continue without session - user will see logged-out state
+  }
+
     if(session){ // this means the user is logged in alredy
       redirect("/dashboard")
     }

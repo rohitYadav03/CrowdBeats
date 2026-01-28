@@ -71,7 +71,7 @@ socket.off("fetchQueue");
   const fetchQueue = async () => {
     try {
       const res = await fetch(`/api/songs/queue?roomCode=${roomCode}`);
-      const data = await res.json();
+      const data = await res?.json();
 
       if (res.ok) {
         setQueue(data.data);
