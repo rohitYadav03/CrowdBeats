@@ -1,5 +1,7 @@
 import { io } from "socket.io-client";
 
-const socket = io("ws://localhost:3000")
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+  transports: ["websocket"],
+});
 
 export default socket;
